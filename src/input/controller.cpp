@@ -140,6 +140,10 @@ void GameController::SetTouchpadState(int touch_index, bool touch_down, float x,
     const u64 timestamp = Libraries::Kernel::sceKernelGetProcessTime();
     const bool was_pressed = m_state.touchpad[0].state || m_state.touchpad[1].state;
     auto& touch = m_state.touchpad[touch_index];
+    if (touch_down != touch.state) {
+        LOG_INFO(Input, "[touchdbg] emulator touch {} {} at ({:.2f}, {:.2f})", touch_index,
+                 touch_down ? "DOWN" : "UP", x, y);
+    }
     if (touch_down && !touch.state) {
         touch.ID = m_next_touch_id;
         m_next_touch_id = m_next_touch_id == 127 ? 1 : m_next_touch_id + 1;
@@ -158,8 +162,10 @@ void GameController::SimulateTouchpadSwipe(float x0, float y0, float x1, float y
                                            u32 duration_ms) {
     bool expected = false;
     if (!m_swipe_active.compare_exchange_strong(expected, true)) {
+        LOG_INFO(Input, "[touchdbg] swipe ignored, previous swipe still running");
         return;
     }
+    LOG_INFO(Input, "[touchdbg] swipe start ({:.2f}, {:.2f}) -> ({:.2f}, {:.2f})", x0, y0, x1, y1);
     std::thread([this, x0, y0, x1, y1, duration_ms] {
         constexpr int steps = 12;
         const auto step_time = std::chrono::milliseconds(std::max<u32>(duration_ms / steps, 1));
