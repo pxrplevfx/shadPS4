@@ -777,6 +777,9 @@ void ControllerOutput::FinalizeUpdate(u8 gamepad_index) {
             // two thumbs resting on the left and right halves of the pad
             controller->SetTouchpadState(0, new_button_state, 0.30f, 0.5f);
             controller->SetTouchpadState(1, new_button_state, 0.70f, 0.5f);
+            // pressing down with both thumbs also clicks the pad
+            controller->Button(SDLGamepadToOrbisButton(SDL_GAMEPAD_BUTTON_TOUCHPAD_CENTER),
+                               new_button_state);
             break;
         case SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_UP:
             if (new_button_state)
