@@ -611,6 +611,20 @@ void ParseInputConfig(const std::string game_id = "") {
     }
     config_stream.close();
     std::sort(connections.begin(), connections.end());
+    {
+        int touch_bindings = 0;
+        for (auto& c : connections) {
+            if (c.output->button >= SDL_GAMEPAD_BUTTON_TOUCHPAD_LEFT &&
+                c.output->button <= SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_RIGHT) {
+                touch_bindings++;
+                if (c.output->gamepad_id == 0)
+                    LOG_INFO(Input, "[inputdbg] touch binding {} <- {}", c.output->button,
+                             c.binding.ToString());
+            }
+        }
+        LOG_INFO(Input, "[inputdbg] config {} loaded, {} touchpad bindings", config_file.string(),
+                 touch_bindings);
+    }
     for (auto& c : connections) {
         LOG_DEBUG(Input, "Binding: {} : {}", c.output->ToString(), c.binding.ToString());
     }
@@ -924,6 +938,12 @@ bool UpdatePressedKeys(InputEvent event) {
             it->first.axis_value = event.axis_value;
         }
         return true;
+    }
+    if (input.type != InputType::Axis) {
+        LOG_INFO(Input, "[inputdbg] key {} {}", input.ToString(), event.active ? "down" : "up");
+    }
+    if (input.type == InputType::Axis) {
+        return false;
     } else if (event.active) {
         // Find the correct position for insertion to maintain order
         auto it = std::lower_bound(pressed_keys.begin(), pressed_keys.end(), input,
