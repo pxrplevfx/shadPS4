@@ -1,10 +1,12 @@
-﻿// SPDX-FileCopyrightText: Copyright 2024-2026 shadPS4 Emulator Project
+// SPDX-FileCopyrightText: Copyright 2024-2026 shadPS4 Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <mutex>
+#include <thread>
 #include <unordered_set>
 #include <utility>
 
@@ -206,6 +208,27 @@ void GameController::SetTouchpadState(int touch_index, bool touch_down, float x,
         m_touch_down_timestamp = 0;
     }
     PushStateLocked(timestamp);
+}
+
+void GameController::SimulateTouchpadSwipe(float x0, float y0, float x1, float y1,
+                                           u32 duration_ms) {
+    bool expected = false;
+    if (!m_swipe_active.compare_exchange_strong(expected, true)) {
+        return;
+    }
+    std::thread([this, x0, y0, x1, y1, duration_ms] {
+        constexpr int steps = 12;
+        const auto step_time = std::chrono::milliseconds(std::max<u32>(duration_ms / steps, 1));
+        for (int i = 0; i <= steps; i++) {
+            const float t = static_cast<float>(i) / steps;
+            SetTouchpadState(0, true, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+            std::this_thread::sleep_for(step_time);
+        }
+        // hold the finger at the end briefly so games polling slower than us still see it
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        SetTouchpadState(0, false, x1, y1);
+        m_swipe_active = false;
+    }).detach();
 }
 
 void GameController::ConnectController(SDL_Gamepad* pad) {
