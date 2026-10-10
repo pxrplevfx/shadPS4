@@ -4,6 +4,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <mutex>
 #include <optional>
 #include <utility>
@@ -116,6 +117,9 @@ public:
     void PollLightColour();
     bool SetVibration(u8 smallMotor, u8 largeMotor);
     void SetTouchpadState(int touchIndex, bool touchDown, float x, float y);
+    // Emulates a finger sliding from (x0,y0) to (x1,y1) and lifting, for controllers without a
+    // touchpad. Runs asynchronously; a new swipe is ignored while one is in progress.
+    void SimulateTouchpadSwipe(float x0, float y0, float x1, float y1, u32 duration_ms = 180);
 
     float gyro_buf[3] = {0.0f, 0.0f, 0.0f}, accel_buf[3] = {0.0f, 9.81f, 0.0f};
     s32 user_id = Libraries::UserService::ORBIS_USER_SERVICE_USER_ID_INVALID;
@@ -129,6 +133,7 @@ private:
     void UpdateEmulatedMotionLocked(u64 timestamp);
 
     u8 m_next_touch_id{1};
+    std::atomic<bool> m_swipe_active{false};
     u64 m_touch_down_timestamp{};
     u64 m_last_orientation_update{};
 
