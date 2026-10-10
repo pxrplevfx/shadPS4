@@ -762,6 +762,7 @@ void ControllerOutput::FinalizeUpdate(u8 gamepad_index) {
             break;
         case SDL_GAMEPAD_BUTTON_TOUCHPAD_TWO_FINGER:
             // two thumbs resting on the left and right halves of the pad
+            controller->SetTouchOverride(new_button_state);
             controller->SetTouchpadState(0, new_button_state, 0.30f, 0.5f);
             controller->SetTouchpadState(1, new_button_state, 0.70f, 0.5f);
             // pressing down with both thumbs also clicks the pad
@@ -783,6 +784,12 @@ void ControllerOutput::FinalizeUpdate(u8 gamepad_index) {
         case SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_RIGHT:
             if (new_button_state)
                 controller->SimulateTouchpadSwipe(0.15f, 0.5f, 0.85f, 0.5f);
+            break;
+        case SDL_GAMEPAD_BUTTON_TOUCHPAD_STICK:
+            controller->SetTouchStickSource(0, new_button_state);
+            break;
+        case SDL_GAMEPAD_BUTTON_TOUCHPAD_CLICK:
+            controller->SetTouchStickSource(1, new_button_state);
             break;
         case LEFTJOYSTICK_HALFMODE:
             leftjoystick_halfmode = new_button_state;
@@ -906,6 +913,14 @@ void ControllerOutput::FinalizeUpdate(u8 gamepad_index) {
             return;
         default:
             break;
+        }
+        if (c_axis == Axis::LeftX || c_axis == Axis::LeftY) {
+            // the left stick may be driving a finger on the touchpad instead of the character
+            controller->UpdateTouchStickAxis(c_axis == Axis::LeftY,
+                                             static_cast<int>(*new_param * multiplier));
+            if (controller->IsTouchStickActive()) {
+                return;
+            }
         }
         controller->Axis(c_axis, GetAxis(-0x80, 0x7f, *new_param * multiplier));
     }
@@ -1063,6 +1078,9 @@ void ActivateOutputsFromInputs() {
         // Update all outputs
         for (auto& it : output_arrays[i].data) {
             it.FinalizeUpdate(i);
+        }
+        if (i < 5) {
+            ControllerOutput::controllers[i]->CommitTouchStick();
         }
     }
 }
