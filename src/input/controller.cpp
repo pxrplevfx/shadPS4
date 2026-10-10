@@ -231,6 +231,40 @@ void GameController::SimulateTouchpadSwipe(float x0, float y0, float x1, float y
     }).detach();
 }
 
+void GameController::SetTouchStickSource(int source, bool held) {
+    if (source >= 0 && source < 2) {
+        m_touch_stick_sources[source] = held;
+    }
+}
+
+void GameController::CommitTouchStick() {
+    const bool active = m_touch_stick_sources[0] || m_touch_stick_sources[1];
+    if (active != m_touch_stick_active) {
+        m_touch_stick_active = active;
+        if (active || (!m_touch_override && !m_swipe_active)) {
+            SetTouchpadState(0, active, m_touch_stick_pos[0], m_touch_stick_pos[1]);
+        }
+        // While the stick drives the finger the character must not walk; give the stick back
+        // to the game where it currently points once the finger is lifted.
+        Axis(Input::Axis::LeftX, GetAxis(-0x80, 0x7f, active ? 0 : m_touch_stick_raw[0]));
+        Axis(Input::Axis::LeftY, GetAxis(-0x80, 0x7f, active ? 0 : m_touch_stick_raw[1]));
+    }
+    const bool clicking = m_touch_stick_sources[1];
+    if (clicking != m_touch_stick_clicking) {
+        m_touch_stick_clicking = clicking;
+        Button(Libraries::Pad::OrbisPadButtonDataOffset::TouchPad, clicking);
+    }
+}
+
+void GameController::UpdateTouchStickAxis(bool y_axis, int value) {
+    const int i = y_axis ? 1 : 0;
+    m_touch_stick_raw[i] = value;
+    m_touch_stick_pos[i] = std::clamp(0.5f + static_cast<float>(value) / 256.0f, 0.02f, 0.98f);
+    if (m_touch_stick_active) {
+        SetTouchpadState(0, true, m_touch_stick_pos[0], m_touch_stick_pos[1]);
+    }
+}
+
 void GameController::ConnectController(SDL_Gamepad* pad) {
     std::lock_guard lock{m_state_mutex};
     m_sdl_gamepad = pad;
