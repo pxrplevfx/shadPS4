@@ -34,6 +34,8 @@
 #define SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_DOWN SDL_GAMEPAD_BUTTON_COUNT + 8
 #define SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_LEFT SDL_GAMEPAD_BUTTON_COUNT + 9
 #define SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_RIGHT SDL_GAMEPAD_BUTTON_COUNT + 10
+#define SDL_GAMEPAD_BUTTON_TOUCHPAD_STICK SDL_GAMEPAD_BUTTON_COUNT + 11
+#define SDL_GAMEPAD_BUTTON_TOUCHPAD_CLICK SDL_GAMEPAD_BUTTON_COUNT + 12
 
 #define SDL_EVENT_TOGGLE_FULLSCREEN SDL_EVENT_USER + 1
 #define SDL_EVENT_TOGGLE_PAUSE SDL_EVENT_USER + 2
@@ -157,6 +159,8 @@ const std::map<std::string, u32> string_to_cbutton_map = {
     {"touchpad_swipe_down", SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_DOWN},
     {"touchpad_swipe_left", SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_LEFT},
     {"touchpad_swipe_right", SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_RIGHT},
+    {"touchpad_stick", SDL_GAMEPAD_BUTTON_TOUCHPAD_STICK},
+    {"touchpad_click", SDL_GAMEPAD_BUTTON_TOUCHPAD_CLICK},
     {"leftjoystick_halfmode", LEFTJOYSTICK_HALFMODE},
     {"rightjoystick_halfmode", RIGHTJOYSTICK_HALFMODE},
     {"motion_tilt_left", MOTION_TILT_LEFT},
@@ -560,7 +564,7 @@ public:
 
 class ControllerAllOutputs {
 public:
-    static constexpr u64 output_count = 53;
+    static constexpr u64 output_count = 55;
     std::array<ControllerOutput, output_count> data = {
         // Important: these have to be the first, or else they will update in the wrong order
         ControllerOutput(LEFTJOYSTICK_HALFMODE),
@@ -588,6 +592,8 @@ public:
         ControllerOutput(SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_DOWN),
         ControllerOutput(SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_LEFT),
         ControllerOutput(SDL_GAMEPAD_BUTTON_TOUCHPAD_SWIPE_RIGHT),
+        ControllerOutput(SDL_GAMEPAD_BUTTON_TOUCHPAD_STICK),
+        ControllerOutput(SDL_GAMEPAD_BUTTON_TOUCHPAD_CLICK),
         ControllerOutput(SDL_GAMEPAD_BUTTON_DPAD_UP),    // Up
         ControllerOutput(SDL_GAMEPAD_BUTTON_DPAD_DOWN),  // Down
         ControllerOutput(SDL_GAMEPAD_BUTTON_DPAD_LEFT),  // Left
