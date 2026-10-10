@@ -120,6 +120,19 @@ public:
     // Emulates a finger sliding from (x0,y0) to (x1,y1) and lifting, for controllers without a
     // touchpad. Runs asynchronously; a new swipe is ignored while one is in progress.
     void SimulateTouchpadSwipe(float x0, float y0, float x1, float y1, u32 duration_ms = 180);
+    // Touchpad driven by the left stick: while a source is held a finger rests on the touchpad
+    // where the stick points (source 0), optionally clicking the pad (source 1). Sources are
+    // gathered during an input pass and applied together by CommitTouchStick().
+    void SetTouchStickSource(int source, bool held);
+    void CommitTouchStick();
+    void UpdateTouchStickAxis(bool y_axis, int value);
+    // Another touchpad output (two-finger press) owns the fingers; the stick must not lift them.
+    void SetTouchOverride(bool held) {
+        m_touch_override = held;
+    }
+    bool IsTouchStickActive() const {
+        return m_touch_stick_active;
+    }
 
     float gyro_buf[3] = {0.0f, 0.0f, 0.0f}, accel_buf[3] = {0.0f, 9.81f, 0.0f};
     s32 user_id = Libraries::UserService::ORBIS_USER_SERVICE_USER_ID_INVALID;
@@ -134,6 +147,12 @@ private:
 
     u8 m_next_touch_id{1};
     std::atomic<bool> m_swipe_active{false};
+    bool m_touch_stick_sources[2]{};
+    bool m_touch_stick_active{};
+    bool m_touch_override{};
+    bool m_touch_stick_clicking{};
+    int m_touch_stick_raw[2]{};
+    float m_touch_stick_pos[2]{0.5f, 0.5f};
     u64 m_touch_down_timestamp{};
     u64 m_last_orientation_update{};
 
