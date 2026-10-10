@@ -420,6 +420,15 @@ int ProcessStates(OrbisPadData* pData, const Input::State* states, s32 num) {
         if (Common::ElfInfo::Instance().FirmwareVer() > Common::ElfInfo::FW_350) {
             pData[i].touchData.time_since_touch_held_down = states[i].touch_time_since_held_down;
         }
+        {
+            static u8 last_touch_num = 0;
+            if (pData[i].touchData.touchNum != last_touch_num) {
+                LOG_INFO(Lib_Pad, "[touchdbg] game read touchNum {} -> {} (x={}, y={})",
+                         last_touch_num, pData[i].touchData.touchNum, pData[i].touchData.touch[0].x,
+                         pData[i].touchData.touch[0].y);
+                last_touch_num = pData[i].touchData.touchNum;
+            }
+        }
         pData[i].connected = states[i].connected;
         pData[i].timestamp = states[i].time;
         pData[i].connectedCount = states[i].connected_count;
